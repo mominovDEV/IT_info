@@ -8,10 +8,13 @@ const addCategory = async (req, res) => {
 
     if (parent_category_id !== undefined) {
       let check = await Category.findOne({ category_name });
+
       let isValid = mongoose.Types.ObjectId.isValid(parent_category_id);
-      if (!isValid) return res.error(400, { message: "Id is incorrect" });
+
+      if (!isValid) return res.json(400, { message: "Id is incorrect" });
+
       if (check) {
-        return res.error(400, { message: "The category has already added" });
+        return res.json(400, { message: "The category has already added" });
       }
       const data = await Category({ category_name, parent_category_id });
       await data.save();
@@ -19,16 +22,13 @@ const addCategory = async (req, res) => {
     }
     let check = await Category.findOne({ category_name });
     if (check) {
-      return res.error(400, { message: "The category has already added" });
+      return res.json(400, { message: "The category has already added" });
     }
     const data = await Category({ category_name, parent_category_id });
     await data.save();
-    return res.ok(200, "The category is added");
+    return res.json( "The category is added");
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
   }
 };
 const getCategories = async (req, res) => {
