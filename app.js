@@ -7,8 +7,8 @@ const PORT = config.get("port") || 3030;
 const app = express();
 
 app.use(express.json());
-
-app.use(mainRouter);
+ 
+app.use("/api",mainRouter);
 
 async function start() {
   try {

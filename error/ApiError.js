@@ -11,13 +11,13 @@ class ApiError extends Error {
     });
   }
   static unauthorized(res, errorMessage) {
-    return res.error( 401, {
+    return res.error(401, {
       message: errorMessage.message,
       friendlyMsg: errorMessage.friendlyMsg,
     });
   }
   static forbidden(res, errorMessage) {
-    return res.error( 403, {
+    return res.error(403, {
       message: errorMessage.message,
       friendlyMsg: errorMessage.friendlyMsg,
     });
@@ -28,11 +28,11 @@ class ApiError extends Error {
       friendlyMsg: errorMessage.friendlyMsg,
     });
   }
-  static internal(res, errorMessage) {
-    console.log(errorMessage.message);
+  static internal(res) {
+    console.log("errorMessage.message");
     return res.error(500, {
-      friendlyMsg: errorMessage.friendlyMsg,
-    });
+      // friendlyMsg: errorMessage.friendlyMsg,   
+    }); 
   }
 }
 

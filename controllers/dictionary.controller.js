@@ -1,23 +1,18 @@
 const Dictionary = require("../models/Dictionary");
-const ApiError = require("../error/ApiError");
-
 const addDictionary = async (req, res) => {
   try {
-    const { term, letter } = req.body;
+    const { term } = req.body;
     let check = await Dictionary.findOne({
       term: { $regex: term, $options: "i" },
     });
     if (check) {
-      return res.error(404, { message: "This is has already added" });
+      return res.json(404, { message: "This is has already added" });
     }
-    const data = await Dictionary({ term, letter });
+    const data = await Dictionary({ term, letter: term[0] });
     await data.save();
     res.ok(200, { message: "The term is added! " });
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
   }
 };
 const getDictionaries = async (req, res) => {
@@ -25,10 +20,8 @@ const getDictionaries = async (req, res) => {
     const data = await Dictionary.find({});
     res.send(data);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+
   }
 };
 const updateDictionary = async (req, res) => {
@@ -38,22 +31,17 @@ const updateDictionary = async (req, res) => {
     await Dictionary.findByIdAndUpdate({ _id: id }, { term, letter });
     res.ok(200, { message: "Term is succesfully updated" });
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+
   }
 };
 const getDictionary = async (req, res) => {
   try {
     const id = req.params.id;
     const data = await Dictionary.findById(id);
-    res.send(data);
+    res.json(data);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
   }
 };
 const deleteDictionary = async (req, res) => {
@@ -62,10 +50,8 @@ const deleteDictionary = async (req, res) => {
     await Dictionary.findByIdAndDelete(id);
     res.ok(200, "The term is deleted");
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+
   }
 };
 const getTermByLetter = async (req, res) => {
@@ -74,10 +60,8 @@ const getTermByLetter = async (req, res) => {
     const data = await Dictionary.find({ letter });
     res.send(data);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+
   }
 };
 module.exports = {

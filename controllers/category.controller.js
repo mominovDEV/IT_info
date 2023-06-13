@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const Category = require("../models/Category");
-// const Validations = require("../validations/index");
 const ApiError = require("../error/ApiError");
 
 const addCategory = async (req, res) => {
