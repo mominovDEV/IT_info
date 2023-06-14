@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
+const { errorHandler } = require("../helpers/error_handler");
 const Category = require("../models/Category");
-const ApiError = require("../error/ApiError");
 
 const addCategory = async (req, res) => {
   try {
@@ -26,9 +26,10 @@ const addCategory = async (req, res) => {
     }
     const data = await Category({ category_name, parent_category_id });
     await data.save();
-    return res.json( "The category is added");
+    return res.json("The category is added");
   } catch (error) {
     console.log(error);
+    errorHandler(res, error);
   }
 };
 const getCategories = async (req, res) => {
@@ -39,10 +40,8 @@ const getCategories = async (req, res) => {
     }
     res.send(data);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -55,10 +54,8 @@ const getCategory = async (req, res) => {
     if (!data) return res.error(400, { message: "Information not found" });
     res.send(data);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -83,10 +80,8 @@ const updateCategory = async (req, res) => {
     );
     res.ok(200, "Category is updated");
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -101,10 +96,8 @@ const deleteCategory = async (req, res) => {
     }
     res.ok(200, "Category is deleted");
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error); 
   }
 };
 module.exports = {

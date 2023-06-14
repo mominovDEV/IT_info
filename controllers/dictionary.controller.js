@@ -1,4 +1,6 @@
+const { errorHandler } = require("../helpers/error_handler");
 const Dictionary = require("../models/Dictionary");
+
 const addDictionary = async (req, res) => {
   try {
     const { term } = req.body;
@@ -13,17 +15,23 @@ const addDictionary = async (req, res) => {
     res.ok(200, { message: "The term is added! " });
   } catch (error) {
     console.log(error);
+    errorHandler(res, error);
+
   }
 };
 const getDictionaries = async (req, res) => {
   try {
     const data = await Dictionary.find({});
-    res.send(data);
+    if (data.length < 1) {
+      return res.status(400).json({ message: "Dictionary is empty" });
+    }
+    res.json(data);
   } catch (error) {
     console.log(error);
-
+    errorHandler(res, error);
   }
 };
+
 const updateDictionary = async (req, res) => {
   try {
     const id = req.params.id;
@@ -32,7 +40,7 @@ const updateDictionary = async (req, res) => {
     res.ok(200, { message: "Term is succesfully updated" });
   } catch (error) {
     console.log(error);
-
+    errorHandler(res, error);
   }
 };
 const getDictionary = async (req, res) => {
@@ -42,6 +50,7 @@ const getDictionary = async (req, res) => {
     res.json(data);
   } catch (error) {
     console.log(error);
+    errorHandler(res, error);
   }
 };
 const deleteDictionary = async (req, res) => {
@@ -51,7 +60,7 @@ const deleteDictionary = async (req, res) => {
     res.ok(200, "The term is deleted");
   } catch (error) {
     console.log(error);
-
+    errorHandler(res, error);
   }
 };
 const getTermByLetter = async (req, res) => {
@@ -61,6 +70,7 @@ const getTermByLetter = async (req, res) => {
     res.send(data);
   } catch (error) {
     console.log(error);
+    errorHandler(res, error);
 
   }
 };
