@@ -1,7 +1,19 @@
 const { errorHandler } = require("../helpers/error_handler");
 const Author = require("../models/Author");
+const jwt = require("jsonwebtoken");
 const { authorValidation } = require("../validations/author.validation");
 const bcrypt = require("bcrypt");
+const config = require("config");
+
+const generateAccessToken = (id, is_expert, authorRoles) => {
+  const payload = {
+    id,
+    is_expert,
+    authorRoles,
+  };
+  return jwt.sign(payload, config.get("secret"), { expiresIn: "1h" });
+};
+
 const addAuthor = async (req, res) => {
   try {
     const { error, value } = authorValidation(req.body);
@@ -24,7 +36,7 @@ const addAuthor = async (req, res) => {
     if (author) {
       return res.status(400).json({ message: "Author is already exists" });
     }
-    const hashedpassword = bcrypt.hashSync(author_password);
+    const hashedpassword = bcrypt.hashSync(author_password, 7);
 
     const newAuthor = await Author.create({
       author_firstname,
@@ -58,7 +70,13 @@ const loginAuthor = async (req, res) => {
     );
     if (!validPassword)
       return res.status(400).send({ message: "email yoki parol notug'ri!" });
-    res.status(200).send({ message: "Tizimga hush kelibsiz" });
+
+    const token = generateAccessToken(author._id, author.is_expert, [
+      "Read",
+      "write",
+    ]);
+
+    res.status(200).send({ token: token });
   } catch (error) {
     errorHandler(res, error);
   }
