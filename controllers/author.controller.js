@@ -14,6 +14,32 @@ const generateAccessToken = (id, is_expert, authorRoles) => {
   return jwt.sign(payload, config.get("secret"), { expiresIn: "1h" });
 };
 
+const loginAuthor = async (req, res) => {
+  try {
+    const { author_email, author_password } = req.body;
+
+    const author = await Author.findOne({ author_email });
+    console.log(author);
+    if (!author)
+      return res.status(400).send({ message: "email yoki parol notug'ri!" });
+    const validPassword = bcrypt.compareSync(
+      author_password,
+      author.author_password
+    );
+
+    if (!validPassword)
+      return res.status(400).send({ message: "email yoki parol notug'ri!" });
+
+    const token = generateAccessToken(author._id, author.is_expert, [
+      "READ",
+      "WRITE",
+    ]);
+
+    res.status(200).send({ token: token });
+  } catch (error) {
+    errorHandler(res, error);
+  }
+};
 const addAuthor = async (req, res) => {
   try {
     const { error, value } = authorValidation(req.body);
@@ -36,8 +62,7 @@ const addAuthor = async (req, res) => {
     if (author) {
       return res.status(400).json({ message: "Author is already exists" });
     }
-    const hashedpassword = bcrypt.hashSync(author_password, 7);
-
+    const hashedpassword = await bcrypt.hash(author_password, 7);
     const newAuthor = await Author.create({
       author_firstname,
       author_lastname,
@@ -58,29 +83,6 @@ const addAuthor = async (req, res) => {
   }
 };
 
-const loginAuthor = async (req, res) => {
-  try {
-    const { author_email, author_password } = req.body;
-    const author = await Author.findOne({ author_email });
-    if (!author)
-      return res.status(400).send({ message: "email yoki parol notug'ri!" });
-    const validPassword = bcrypt.compareSync(
-      author_password,
-      author.author_password
-    );
-    if (!validPassword)
-      return res.status(400).send({ message: "email yoki parol notug'ri!" });
-
-    const token = generateAccessToken(author._id, author.is_expert, [
-      "Read",
-      "write",
-    ]);
-
-    res.status(200).send({ token: token });
-  } catch (error) {
-    errorHandler(res, error);
-  }
-};
 
 const getAllAuthors = async (req, res) => {
   try {

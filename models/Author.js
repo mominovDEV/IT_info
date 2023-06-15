@@ -2,16 +2,16 @@ const { Schema, model } = require("mongoose");
 
 const authorSchema = new Schema(
   {
-    author_first_name: {
+    author_firstname: {
       type: String,
       required: true,
       trim: true,
     },
-    author_last_name: {
+    author_lastname: {
       type: String,
       trim: true,
     },
-    author_nick_name: {
+    author_nickname: {
       type: String,
       required: true,
       trim: true,
@@ -20,6 +20,10 @@ const authorSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    author_password: {
+      type: String,
+      required: true,
     },
     author_phone: {
       type: String,
@@ -35,7 +39,7 @@ const authorSchema = new Schema(
       type: String,
     },
     is_expert: {
-      type: Boolean
+      type: Boolean,
     },
   },
   { versionKey: false }

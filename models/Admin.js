@@ -23,11 +23,11 @@ const adminSchema = new Schema(
     admin_is_creator: {
       type: Boolean,
     },
-    admin_token: {
-      type: String,
+    created_date: {
+      type: Date,
     },
-    admin_activation_link: {
-      type: String,
+    updated_date: {
+      type: Date,
     },
   },
   { versionKey: false, timestamps: true }
