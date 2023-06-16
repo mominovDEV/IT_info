@@ -6,7 +6,7 @@ const getFullName = (parent) =>
 exports.authorValidation = (data) => {
   const schema = Joi.object({
     author_firstname: Joi.string()
-      .pattern(new RegExp("^[A-Za-z]+$"))
+      // .pattern(new RegExp("^[A-Za-z]+$"))
       .required(),
     author_lastname: Joi.string().pattern(new RegExp("^[a-zA-Z]+$")),
     author_fullname: Joi.string().default(getFullName),

@@ -1,18 +1,20 @@
 const { errorHandler } = require("../helpers/error_handler");
 const Author = require("../models/Author");
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 const { authorValidation } = require("../validations/author.validation");
 const bcrypt = require("bcrypt");
-const config = require("config");
+// const config = require("config");
 
-const generateAccessToken = (id, is_expert, authorRoles) => {
-  const payload = {
-    id,
-    is_expert,
-    authorRoles,
-  };
-  return jwt.sign(payload, config.get("secret"), { expiresIn: "1h" });
-};
+const myJwt = require("../services/JwtService");
+
+// const generateAccessToken = (id, is_expert, authorRoles) => {
+//   const payload = {
+//     id,
+//     is_expert,
+//     authorRoles,
+//   };
+//   return jwt.sign(payload, config.get("secret"), { expiresIn: "1h" });
+// };
 
 const loginAuthor = async (req, res) => {
   try {
@@ -29,13 +31,20 @@ const loginAuthor = async (req, res) => {
 
     if (!validPassword)
       return res.status(400).send({ message: "email yoki parol notug'ri!" });
+    const payload = {
+      id: author._id,
+      is_expert: author.is_expert,
+      authorRoles: ["READ", "WRITE"],
+    };
 
-    const token = generateAccessToken(author._id, author.is_expert, [
-      "READ",
-      "WRITE",
-    ]);
+    const tokens = myJwt.generateTokens(payload);
+    console.log(tokens);
+    // const token = generateAccessToken(author._id, author.is_expert, [
+    //   "READ",
+    //   "WRITE",
+    // ]);
 
-    res.status(200).send({ token: token });
+    res.status(200).send({ tokens });
   } catch (error) {
     errorHandler(res, error);
   }
@@ -82,7 +91,6 @@ const addAuthor = async (req, res) => {
     errorHandler(res, error);
   }
 };
-
 
 const getAllAuthors = async (req, res) => {
   try {

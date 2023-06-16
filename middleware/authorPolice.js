@@ -1,7 +1,8 @@
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 const config = require("config");
+const myJwt = require("../services/JwtService");
 
-module.exports = function (req, res, next) {
+module.exports = async function (req, res, next) {
   if (req.method === "OPTIONS") {
     next();
   }
@@ -17,7 +18,12 @@ module.exports = function (req, res, next) {
       return res.status(403).json({ message: "bear ruyhatdan utmagan" });
     }
 
-    const decodedToken = jwt.verify(token, config.get("secret"));
+    const [error, decodedToken] = await to(
+      myJwt.verifyAccess(token, config.get("secret"))
+    );
+    if (error) {
+      return res.status(403).send({ message: error.message });
+    }
     console.log(decodedToken);
     next();
   } catch (error) {
@@ -25,3 +31,6 @@ module.exports = function (req, res, next) {
     return res.status(403).send({ message: "bear ruyhatdan utmagan" });
   }
 };
+async function to(promise) {
+  return promise.then((response) => [null, response]).catch((error) => [error]);
+}
