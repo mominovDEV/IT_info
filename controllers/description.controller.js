@@ -10,23 +10,21 @@ const addDescription = async (req, res) => {
     let isValid = mongoose.Types.ObjectId.isValid(dict_id);
     let isValid2 = mongoose.Types.ObjectId.isValid(category_id);
     if (!isValid || !isValid2)
-      return res.error(404, { message: "Id is incorrect" });
+      return res.json(404, { message: "Id is incorrect" });
     let ans1 = await Dictionary.findOne({ _id: dict_id });
     let ans2 = await Category.findOne({ _id: category_id });
     if (!ans1) {
-      return res.error(400, { message: "Dictionarydan id topilmadi" });
+      return res.json(400, { message: "Dictionarydan id topilmadi" });
     }
     if (!ans2) {
-      return res.error(400, { message: "Categorydan idga topilmadi" });
+      return res.json(400, { message: "Categorydan idga topilmadi" });
     }
     const data = await Description({ dict_id, category_id, description });
     await data.save();
     res.ok(200, "Description is added! ");
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error );
   }
 };
 
@@ -53,10 +51,8 @@ const getDescription = async (req, res) => {
     // res.ok(200, result);
     res.status(200).send(result);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -75,10 +71,8 @@ const updateDescription = async (req, res) => {
     );
     res.ok(200, { message: "Description is updated ! " });
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -92,10 +86,8 @@ const deleteDescription = async (req, res) => {
     await Description.findByIdAndDelete(id);
     res.ok(200, "Description is deleted");
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 module.exports = {

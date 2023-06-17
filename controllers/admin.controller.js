@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const emailValidation = require("../helpers/emailValidation");
 const { errorHandler } = require("../helpers/error_handler");
+const jwt = require("../services/JwtService");
 
 const generateAccessToken = (id, is_expert, authorRoles) => {
   const payload = {
@@ -19,7 +20,7 @@ const loginAdmin = async (req, res) => {
     const { login, admin_password } = req.body;
     if (emailValidation(login))
       admin = await Admin.findOne({ admin_email: login });
-    if (!admin)
+    if (!admin)             
       return res.json(400, { message: "Email or Password is incorrect" });
     const validPassword = bcrypt.compareSync(
       admin_password,

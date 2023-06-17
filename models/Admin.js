@@ -29,6 +29,7 @@ const adminSchema = new Schema(
     updated_date: {
       type: Date,
     },
+    //admin token qushish kk
   },
   { versionKey: false, timestamps: true }
 );

@@ -3,7 +3,7 @@ const Author = require("../models/Author");
 // const jwt = require("jsonwebtoken");
 const { authorValidation } = require("../validations/author.validation");
 const bcrypt = require("bcrypt");
-// const config = require("config");
+const config = require("config");
 
 const myJwt = require("../services/JwtService");
 
@@ -44,11 +44,34 @@ const loginAuthor = async (req, res) => {
     //   "WRITE",
     // ]);
 
+    author.author_token = tokens.refreshToken;
+    await author.save();
+
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxAge: config.get("refresh_ms"),
+      httpOnly: true,
+    });
+
     res.status(200).send({ tokens });
   } catch (error) {
     errorHandler(res, error);
   }
 };
+
+const logoutAuthor = async (req, res) => {
+  const { refreshToken } = req.cookies;
+  let author;
+  if (!refreshToken) return res.error(400, { message: "Token is not found" });
+  author = await Author.findOneAndUpdate(
+    { author_token: refreshToken },
+    { author_token: "" },
+    { new: true }
+  );
+  if (!author) return res.status(400, { message: "Token is not found" });
+  res.clearCookie("refreshToken");
+  res.status(200).send({ author });
+};
+
 const addAuthor = async (req, res) => {
   try {
     const { error, value } = authorValidation(req.body);
@@ -170,6 +193,7 @@ async function getAuthorById(req, res) {
 
 module.exports = {
   addAuthor,
+  logoutAuthor,
   getAllAuthors,
   getAuthorById,
   loginAuthor,
