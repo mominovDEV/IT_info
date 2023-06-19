@@ -1,9 +1,10 @@
 const Admin = require("../models/Admin");
-const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const emailValidation = require("../helpers/emailValidation");
-const { errorHandler } = require("../helpers/error_handler");
 const jwt = require("../services/JwtService");
+const config = require('config');
+const emailValidation = require("../helpers/emailValidation");
+const mongoose = require("mongoose"); 
+const { errorHandler } = require("../helpers/error_handler");
 
 const generateAccessToken = (id, is_expert, authorRoles) => {
   const payload = {

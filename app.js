@@ -9,9 +9,9 @@ const cookieParser = require("cookie-parser");
 const app = express();
 app.use(error_handling_middleware);
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/api", mainRouter);
-app.use(cookieParser());
 async function start() {
   try {
     await mongoose.connect(config.get("ATLAS_URI"));

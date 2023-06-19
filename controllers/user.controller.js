@@ -3,9 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("../services/JwtService");
 const config = require("config");
 const emailValidation = require("../helpers/emailValidation");
-// const uuid = require("uuid")
 const ApiError = require("../error/ApiError");
-const mailService = require("../services/MailService")
 const generate = require("generate-password")
 
 const addUser = async (req, res) => {

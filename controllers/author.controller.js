@@ -58,6 +58,38 @@ const loginAuthor = async (req, res) => {
   }
 };
 
+const refreshAuthorToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) return res.error(400, { message: "Token is not found" });
+    const authorDataFromCookie = await myJwt.verifyRefresh(refreshToken);
+    const authorDataFromDb = await Author.findOne({
+      author_token: refreshToken,
+    });
+    if (!authorDataFromCookie || !authorDataFromDb) {
+      return res.json(400, { message: "Author is not registered" });
+    }
+    const author = await Author.findById(authorDataFromCookie.id);
+    if (!author) return res.error(400, { message: "ID is incorrect" });
+    const payload = {
+      id: author.id,
+      author_is_expert: author.author_is_expert,
+      authorRoler: ["READ", "WRITE"],
+    };
+    const tokens = myJwt.generateTokens(payload);
+    author.author_token = tokens.refreshToken;
+    await author.save();
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxAge: config.get("refresh_ms"),
+      httpOnly: true,
+    });
+    res.status(200).send({ ...tokens });
+  } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
+  }
+};
+
 const logoutAuthor = async (req, res) => {
   const { refreshToken } = req.cookies;
   let author;
@@ -192,6 +224,7 @@ async function getAuthorById(req, res) {
 // }
 
 module.exports = {
+  refreshAuthorToken,
   addAuthor,
   logoutAuthor,
   getAllAuthors,
