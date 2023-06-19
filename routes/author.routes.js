@@ -6,15 +6,15 @@ const {
   logoutAuthor,
   refreshAuthorToken,
 } = require("../controllers/author.controller");
-const authorPolice = require("../middleware/authorPolice");
-const Validator = require("../middleware/validator");
 
+const authorPolice = require("../middleware/authorPolice");
+const authorRolesPolise = require('../middleware/authorRolesPolise');
+const Validator = require("../middleware/validator");
 const router = Router();
 
-router.post("/", addAuthor);
-router.get("/", authorPolice, getAllAuthors);
-router.post("/login", Validator("author_email_pass"), loginAuthor);
-
+router.route("/").get(authorPolice, getAllAuthors);
+router.route("/").post(Validator("author"), addAuthor);
+router.route("/login").post(Validator("author_email_pass"), loginAuthor);
 router.post("/login", loginAuthor);
 router.post("/logout", logoutAuthor);
 router.post("/refresh", refreshAuthorToken);
