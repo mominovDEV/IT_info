@@ -1,6 +1,6 @@
 const jwt = require("../services/JwtService");
 const config = require("config");
-const to = require("../helpers/functionHandler");
+const to = require("../helpers/error_handler");
 
 module.exports = async function (req, res, next) {
   if (req.method === "OPTIONS") {

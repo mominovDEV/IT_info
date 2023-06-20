@@ -1,53 +1,48 @@
 const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const jwt = require("../services/JwtService");
 const config = require("config");
-const emailValidation = require("../helpers/emailValidation");
+const errorHandler = require("../helpers/error_handler");
 const ApiError = require("../error/ApiError");
-const generate = require("generate-password")
+// const generate = require("generate-password");
+const uuid = require("uuid");
+const mailService = require("../services/MailService");
 
 const addUser = async (req, res) => {
   try {
-    const {
-      user_name,
-      user_email,
-      user_password,
-      user_info,
-      user_photo
-    } = req.body;
+    const { user_name, user_email, user_password, user_info, user_photo } =
+      req.body;
     const userHashedPassword = bcrypt.hashSync(user_password, 7);
 
-    // const user_activation_link = uuid.v4()
+    const user_activation_link = uuid.v4();
     const data = await User({
       user_name,
       user_email,
       user_password: userHashedPassword,
       user_info,
       user_photo,
-      user_activation_link
+      user_activation_link,
     });
     await data.save();
-    // await mailService.sendActivationMail(
-    //   user_email,
-    //   `${config.get("api_url")}/api/user/activate/${user_activation_link}`
-    // )
-    // const payload = {
-    //   id:data._id,
-    //   user_is_active:data.user_is_active
-    // }
-    const tokens = jwt.generateTokens(payload)
-    data.user_token = tokens.refreshToken
-    await data.save()
-    res.cookie("refreshToken",tokens.refreshToken,{
-      maxAge:config.get("refresh_ms"),
-      httpOnly:true
-    })
-    res.ok(200,{...tokens,user:payload});
-  } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
+    await mailService.sendActivationMail(
+      user_email,
+      `${config.get("api_url")}/api/user/activate/${user_activation_link}`
+    );
+    const payload = {
+      id: data._id,
+      user_is_active: data.user_is_active,
+    };
+    const tokens = jwt.generateTokens(payload);
+    data.user_token = tokens.refreshToken;
+    await data.save();
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxAge: config.get("refresh_ms"),
+      httpOnly: true,
     });
+    res.ok(200, { ...tokens, user: payload });
+  } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -58,10 +53,8 @@ const getUsers = async (req, res) => {
       return res.error(400, { friendlyMsg: "Information not found" });
     res.send(data);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 const getUser = async (req, res) => {
@@ -71,12 +64,10 @@ const getUser = async (req, res) => {
     if (!idData)
       return res.error(400, { friendlyMsg: "Information is not found" });
     // res.ok(200, idData);
-    res.status(200).send(idData)
+    res.status(200).send(idData);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -109,10 +100,8 @@ const updateUser = async (req, res) => {
     await data.save();
     res.ok(200, "OK.Info was updated");
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -123,20 +112,17 @@ const deleteUser = async (req, res) => {
     if (!idData)
       return res.error(400, { friendlyMsg: "Information was not found" });
     await User.findByIdAndDelete(id);
-    if (req.user.id !== req.params.id){
+    if (req.user.id !== req.params.id) {
       ApiError.unauthorized(res, {
-        friendlyMsg: "User ro'yxatga olinmagan"
+        friendlyMsg: "User ro'yxatga olinmagan",
       });
     }
     res.ok(200, { friendlyMsg: "Ok. userInfo is deleted" });
+  } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
   }
-    catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
-  }
-} 
+};
 
 const loginUser = async (req, res) => {
   let user;
@@ -175,10 +161,8 @@ const logout = async (req, res) => {
     res.clearCookie("refreshToken");
     res.ok(200, user);
   } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
+    console.log(error);
+    errorHandler(res, error);
   }
 };
 
@@ -206,6 +190,22 @@ const refreshUserToken = async (req, res) => {
     });
     res.ok(200, tokens);
   } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
+  }
+};
+
+const activateLink = async (req, res) => {
+  try {
+    const link = req.params.link;
+    const data = await User.findOne({ user_activation_link: link });
+    if (!data) return res.error(403, { friendlyMsg: "Data is not found" });
+    if (data.user_is_active == true)
+      return res.error(400, { friendlyMsg: "User has already been activated" });
+    data.user_is_active = true;
+    await data.save();
+    res.ok(200, "User is activated");
+  } catch (error) {
     ApiError.internal(res, {
       message: error,
       friendlyMsg: "Serverda hatolik",
@@ -213,47 +213,26 @@ const refreshUserToken = async (req, res) => {
   }
 };
 
-const activateLink = async (req,res) => {
-  try {
-    const link = req.params.link
-    const data = await User.findOne({user_activation_link:link})
-    if(!data) return res.error(403,{friendlyMsg:"Data is not found"})
-    if(data.user_is_active == true) return res.error(400,{friendlyMsg:"User has already been activated"})
-    data.user_is_active = true
-    await data.save()
-    res.ok(200,"User is activated")
-  } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
-  }
-}
-
-const forgetPassword = async (req,res) =>{
-  try {
-    const {user_email} = req.body
-    const user = await User.findOne({user_email})
-    if(!user) return res.error(400,{friendlyMsg:"Information is not found"})
-    let password = generate.generate({
-      length: 10,
-      numbers: true
-    });
-    await mailService.sendPasswordMail(
-      user_email,
-      password
-    )
-    let hashpassword = bcrypt.hashSync(password,7)
-    user.user_password = hashpassword
-    await user.save()
-    res.ok(200,{message:"We send new password to your email"})
-  } catch (error) {
-    ApiError.internal(res, {
-      message: error,
-      friendlyMsg: "Serverda hatolik",
-    });
-  }
-}
+// const forgetPassword = async (req, res) => {
+//   try {
+//     const { user_email } = req.body;
+//     const user = await User.findOne({ user_email });
+//     if (!user)
+//       return res.error(400, { friendlyMsg: "Information is not found" });
+//     // let password = generate.generate({
+//     //   length: 10,
+//     //   numbers: true,
+//     // });
+//     await mailService.sendPasswordMail(user_email, password);
+//     let hashpassword = bcrypt.hashSync(password, 7);
+//     user.user_password = hashpassword;
+//     await user.save();
+//     res.ok(200, { message: "We send new password to your email" });
+//   } catch (error) {
+//     console.log(error);
+//     errorHandler(res, error);
+//   }
+// };
 module.exports = {
   getUser,
   getUsers,
@@ -264,5 +243,5 @@ module.exports = {
   logout,
   refreshUserToken,
   activateLink,
-  forgetPassword
+  // forgetPassword,
 };

@@ -5,6 +5,9 @@ const { authorValidation } = require("../validations/author.validation");
 const bcrypt = require("bcrypt");
 const config = require("config");
 
+const uuid = require("uuid");
+const mailService = require("../services/MailService");
+
 const myJwt = require("../services/JwtService");
 
 // const generateAccessToken = (id, is_expert, authorRoles) => {
@@ -62,14 +65,14 @@ const refreshAuthorToken = async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
     if (!refreshToken) return res.error(400, { message: "Token is not found" });
-    const authorDataFromCookie = await myJwt.verifyRefresh(refreshToken);
-    const authorDataFromDb = await Author.findOne({
+    const authorauthorFromCookie = await myJwt.verifyRefresh(refreshToken);
+    const authorauthorFromDb = await Author.findOne({
       author_token: refreshToken,
     });
-    if (!authorDataFromCookie || !authorDataFromDb) {
+    if (!authorauthorFromCookie || !authorauthorFromDb) {
       return res.json(400, { message: "Author is not registered" });
     }
-    const author = await Author.findById(authorDataFromCookie.id);
+    const author = await Author.findById(authorauthorFromCookie.id);
     if (!author) return res.error(400, { message: "ID is incorrect" });
     const payload = {
       id: author.id,
@@ -127,6 +130,7 @@ const addAuthor = async (req, res) => {
       return res.status(400).json({ message: "Author is already exists" });
     }
     const hashedpassword = await bcrypt.hash(author_password, 7);
+    const author_activation_link = uuid.v4();
     const newAuthor = await Author.create({
       author_firstname,
       author_lastname,
@@ -138,9 +142,30 @@ const addAuthor = async (req, res) => {
       author_position,
       author_photo,
       is_expert,
+      author_activation_link,
     });
     await newAuthor.save();
-    res.json({ message: "Create success", author: newAuthor });
+    await mailService.sendActivationMail(
+      author_email,
+      `${config.get("api_url")}/api/author/activate/${author_activation_link}`
+    );
+    const payload = {
+      id: newAuthor._id,
+      is_expert: newAuthor.is_expert,
+      authorRoles: ["READ", "WRITE"],
+      author_is_active: newAuthor.author_is_active,
+    };
+    const tokens = myJwt.generateTokens(payload);
+    newAuthor.author_token = tokens.refreshToken;
+
+    await newAuthor.save();
+
+    res.cookie("refreshToken", tokens.refreshToken, {
+      maxAge: config.get("refresh_ms"),
+      httpOnly: true,
+    });
+
+    res.json({ ...tokens, author: payload });
   } catch (error) {
     console.log(error);
     errorHandler(res, error);
@@ -153,7 +178,7 @@ const getAllAuthors = async (req, res) => {
     if (authors.length < 1) {
       return res.status(400).json({ message: "Author is empty" });
     }
-    res.json({ length: authors.length, data: authors });
+    res.json({ length: authors.length, author: authors });
   } catch (error) {
     console.log(error);
     errorHandler(res, error);
@@ -174,54 +199,77 @@ async function getAuthorById(req, res) {
   }
 }
 
-// async function getAuthorByName(req, res) {
-//   try {
-//     const name = req.params.q;
-//     const cat = await Author.findOne({ author_name: name }).populate(
-//       "parent_author_id"
-//     );
-//     if (!cat) {
-//       return res.status(400).json({ message: "Author not found" });
-//     }
-//     res.json(cat);
-//   } catch (error) {
-//     console.log(error);
-//     errorHandler(res, error);
-//   }
-// }
+const authorActivate = async (req, res) => {
+  try {
+    const author = await Author.findOne({
+      author_activate_link: req.params.link,
+    });
+    console.log(req.params.link);
+    if (!author)
+      return res.status(404).send({ message: "author is not found" });
 
-// async function deleteAuthor(req, res) {
-//   try {
-//     const _id = req.params.id;
-//     const cat = await Author.findOneAndDelete({ _id });
-//     if (!cat) {
-//       return res.status(400).json({ message: "Author doesn't exist" });
-//     }
-//     res.json({ message: "Deleted success" });
-//   } catch (error) {
-//     console.log(error);
-//     errorHandler(res, error);
-//   }
-// }
+    if (author.author_is_active)
+      return res.status(404).send({ message: "user already activate" });
 
-// async function updateAuthor(req, res) {
-//   try {
-//     const _id = req.params.id;
-//     const { author_name, parent_author_id } = req.body;
-//     const cat = await Author.findOneAndUpdate(
-//       { _id },
-//       { author_name, parent_author_id },
-//       { new: true }
-//     );
-//     if (!cat) {
-//       return res.status(400).json({ message: "Author not found" });
-//     }
-//     res.json({ message: "Update success", updatedTo: cat });
-//   } catch (error) {
-//     console.log(error);
-//     errorHandler(res, error);
-//   }
-// }
+    author.author_is_active = true;
+    await author.save();
+    res.status(200).send({
+      author_is_active: author.author_is_active,
+      message: "user activated",
+    });
+  } catch (error) {
+    errorHandler(res, error);
+  }
+};
+
+async function getAuthorByName(req, res) {
+  try {
+    const name = req.params.q;
+    const cat = await Author.findOne({ author_name: name }).populate(
+      "parent_author_id"
+    );
+    if (!cat) {
+      return res.status(400).json({ message: "Author not found" });
+    }
+    res.json(cat);
+  } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
+  }
+}
+
+async function deleteAuthor(req, res) {
+  try {
+    const _id = req.params.id;
+    const cat = await Author.findOneAndDelete({ _id });
+    if (!cat) {
+      return res.status(400).json({ message: "Author doesn't exist" });
+    }
+    res.json({ message: "Deleted success" });
+  } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
+  }
+}
+
+async function updateAuthor(req, res) {
+  try {
+    const _id = req.params.id;
+    const { author_name, parent_author_id } = req.body;
+    const cat = await Author.findOneAndUpdate(
+      { _id },
+      { author_name, parent_author_id },
+      { new: true }
+    );
+    if (!cat) {
+      return res.status(400).json({ message: "Author not found" });
+    }
+    res.json({ message: "Update success", updatedTo: cat });
+  } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
+  }
+}
 
 module.exports = {
   refreshAuthorToken,
@@ -230,7 +278,8 @@ module.exports = {
   getAllAuthors,
   getAuthorById,
   loginAuthor,
-  // getAuthorByName,
-  // deleteAuthor,
-  // updateAuthor,
+  authorActivate,
+  getAuthorByName,
+  deleteAuthor,
+  updateAuthor,
 };

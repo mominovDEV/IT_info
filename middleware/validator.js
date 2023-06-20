@@ -1,9 +1,9 @@
 const Validators = require("../validations/index");
 
 module.exports = function (validator) {
-  if (!Validators.hasOwnProperty(validator))
-    throw new Error(`'${validator}'validatoris not exist`);
-
+  if (!Validators.hasOwnProperty(validator)) {
+    throw new Error(`${validator} validator doesn't exist`);
+  }
   return async function (req, res, next) {
     try {
       const validated = await Validators[validator].validateAsync(req.body);
