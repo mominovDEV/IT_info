@@ -40,6 +40,18 @@ const loginAuthor = async (req, res) => {
       authorRoles: ["READ", "WRITE"],
     };
 
+    //uncauhtEheption
+    try {
+      setTimeout(function(){
+        var error= new Error("HELLO");
+        throw error;
+      },1000);
+    } catch (error) {
+      console.log(error);
+    }
+    // unhandledRejection
+    new Promise((_,reject)=>reject(new Error("woops1")))
+
     const tokens = myJwt.generateTokens(payload);
     console.log(tokens);
     // const token = generateAccessToken(author._id, author.is_expert, [
@@ -241,11 +253,14 @@ async function getAuthorByName(req, res) {
 async function deleteAuthor(req, res) {
   try {
     const _id = req.params.id;
-    const cat = await Author.findOneAndDelete({ _id });
-    if (!cat) {
-      return res.status(400).json({ message: "Author doesn't exist" });
+    if (_id!==req.uthor.id) {
+      return res.status(401).send({ message: "sizda bunday huquq yuq" });
     }
-    res.json({ message: "Deleted success" });
+    const result = await Author.findOneAndDelete({ _id });
+      if (result == null) {
+        return res.status(400).send({ message: "id is incorect" });
+      }
+    res.status(200).send({ message: "Deleted success" });
   } catch (error) {
     console.log(error);
     errorHandler(res, error);

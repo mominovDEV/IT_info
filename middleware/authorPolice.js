@@ -24,7 +24,7 @@ module.exports = async function (req, res, next) {
     if (error) {
       return res.status(403).send({ message: error.message });
     }
-    console.log(decodedToken);
+    req.author = decodedToken;
     next();
   } catch (error) {
     console.log(error);

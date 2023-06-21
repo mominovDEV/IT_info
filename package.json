@@ -25,9 +25,11 @@
     "cookie": "^0.5.0",
     "cookie-parser": "^1.4.6",
     "cookie-signature": "^1.0.6",
+    "cross-env": "^7.0.3",
     "debug": "^2.6.9",
     "depd": "^2.0.0",
     "destroy": "^1.2.0",
+    "dotenv": "^16.3.1",
     "ee-first": "^1.1.1",
     "encodeurl": "^1.0.2",
     "escape-html": "^1.0.3",
@@ -114,13 +116,15 @@
     "uuid": "^9.0.0",
     "vary": "^1.1.2",
     "webidl-conversions": "^7.0.0",
-    "whatwg-url": "^11.0.0"
+    "whatwg-url": "^11.0.0",
+    "winston": "^3.9.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
   },
   "scripts": {
-    "dev": "nodemon app"
+    "dev": "cross-env NODE_ENV=development nodemon app",
+    "prod": "cross-env prod_secret=123456 NODE_ENV=production nodemon app"
   },
   "keywords": [],
   "author": "",
