@@ -41,16 +41,16 @@ const loginAuthor = async (req, res) => {
     };
 
     //uncauhtEheption
-    try {
-      setTimeout(function(){
-        var error= new Error("HELLO");
-        throw error;
-      },1000);
-    } catch (error) {
-      console.log(error);
-    }
+    // try {
+    //   setTimeout(function(){
+    //     var error= new Error("HELLO");
+    //     throw error;
+    //   },1000);
+    // } catch (error) {
+    //   console.log(error);
+    // }
     // unhandledRejection
-    new Promise((_,reject)=>reject(new Error("woops1")))
+    // new Promise((_,reject)=>reject(new Error("woops1")))
 
     const tokens = myJwt.generateTokens(payload);
     console.log(tokens);

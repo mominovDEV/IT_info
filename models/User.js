@@ -4,17 +4,18 @@ const userSchema = new Schema(
   {
     user_name: {
       type: String,
-      required: true,
       trim: true,
+      requred: true,
     },
     user_email: {
       type: String,
-      required: true,
-      lowercase: true,
+      trim: true,
+      unique: true,
+      requred: true,
     },
     user_password: {
       type: String,
-      required: true,
+      requred: true,
     },
     user_info: {
       type: String,
@@ -26,14 +27,13 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    user_activation_link: {
-      type: String,
-    },
     user_token: {
       type: String,
     },
+    user_activate_link: {
+      type: String,
+    },
   },
-
   { versionKey: false, timestamps: true }
 );
 

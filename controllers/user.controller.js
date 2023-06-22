@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-const jwt = require("../services/JwtService");
+const jwtService = require("../services/JwtService");
 const config = require("config");
 const errorHandler = require("../helpers/error_handler");
 const ApiError = require("../error/ApiError");
@@ -8,43 +8,45 @@ const ApiError = require("../error/ApiError");
 const uuid = require("uuid");
 const mailService = require("../services/MailService");
 
-const addUser = async (req, res) => {
+async function addUser(req, res) {
   try {
-    const { user_name, user_email, user_password, user_info, user_photo } =
-      req.body;
-    const userHashedPassword = bcrypt.hashSync(user_password, 7);
+    const user = await User.findOne({ user_email: req.body.user_email });
+    if (user) {
+      return res.send({ message: "User already exists" });
+    }
+    const hash = await bcrypt.hash(req.body.user_password, 8);
+    const user_activate_link = uuid.v4();
 
-    const user_activation_link = uuid.v4();
-    const data = await User({
-      user_name,
-      user_email,
-      user_password: userHashedPassword,
-      user_info,
-      user_photo,
-      user_activation_link,
-    });
-    await data.save();
+    req.body.user_activate_link = user_activate_link;
+    req.body.user_password = hash;
+
+    const newUser = await User.create(req.body);
+
     await mailService.sendActivationMail(
-      user_email,
-      `${config.get("api_url")}/api/user/activate/${user_activation_link}`
+      newUser.user_email,
+      `${config.get("api_url")}/api/user/activate/${user_activate_link}`
     );
+
     const payload = {
-      id: data._id,
-      user_is_active: data.user_is_active,
+      id: newUser._id,
+      user_is_active: newUser.user_is_active,
     };
-    const tokens = jwt.generateTokens(payload);
-    data.user_token = tokens.refreshToken;
-    await data.save();
-    res.cookie("refreshToken", tokens.refreshToken, {
+    const tokens = jwtService.generateTokens(payload);
+
+    newUser.user_token = tokens.refreshToken;
+    await newUser.save();
+
+    res.cookie("userRefreshToken", tokens.refreshToken, {
       maxAge: config.get("refresh_ms"),
       httpOnly: true,
     });
-    res.ok(200, { ...tokens, user: payload });
+
+    res.status(201).send({ create: "Success", newUser });
   } catch (error) {
     console.log(error);
     errorHandler(res, error);
   }
-};
+}
 
 const getUsers = async (req, res) => {
   try {
@@ -213,26 +215,26 @@ const activateLink = async (req, res) => {
   }
 };
 
-// const forgetPassword = async (req, res) => {
-//   try {
-//     const { user_email } = req.body;
-//     const user = await User.findOne({ user_email });
-//     if (!user)
-//       return res.error(400, { friendlyMsg: "Information is not found" });
-//     // let password = generate.generate({
-//     //   length: 10,
-//     //   numbers: true,
-//     // });
-//     await mailService.sendPasswordMail(user_email, password);
-//     let hashpassword = bcrypt.hashSync(password, 7);
-//     user.user_password = hashpassword;
-//     await user.save();
-//     res.ok(200, { message: "We send new password to your email" });
-//   } catch (error) {
-//     console.log(error);
-//     errorHandler(res, error);
-//   }
-// };
+const forgetPassword = async (req, res) => {
+  try {
+    const { user_email } = req.body;
+    const user = await User.findOne({ user_email });
+    if (!user)
+      return res.error(400, { friendlyMsg: "Information is not found" });
+    // let password = generate.generate({
+    //   length: 10,
+    //   numbers: true,
+    // });
+    await mailService.sendPasswordMail(user_email, password);
+    let hashpassword = bcrypt.hashSync(password, 7);
+    user.user_password = hashpassword;
+    await user.save();
+    res.ok(200, { message: "We send new password to your email" });
+  } catch (error) {
+    console.log(error);
+    errorHandler(res, error);
+  }
+};
 module.exports = {
   getUser,
   getUsers,
@@ -243,5 +245,5 @@ module.exports = {
   logout,
   refreshUserToken,
   activateLink,
-  // forgetPassword,
+  forgetPassword,
 };

@@ -17,7 +17,7 @@ const userPolice = require("../middleware/userPolice");
 const Validator = require("../middleware/validator");
 
 router.get("/", getUsers);
-router.post("/", Validator("user"), addUser);
+router.post("/", addUser);
 router.post("/login", loginUser);
 router.post("/logout", logout);
 router.get("/refresh", refreshUserToken);

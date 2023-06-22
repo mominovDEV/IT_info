@@ -1,0 +1,11 @@
+2023-06-22T06:19:38.082Z error: unhandledRejection: woops1
+Error: woops1
+    at C:\Users\User\OneDrive\Рабочий стол\NodeJS\12.06.23_ikkinchi_dars\Techopedia\controllers\author.controller.js:53:36
+    at new Promise (<anonymous>)
+    at loginAuthor (C:\Users\User\OneDrive\Рабочий стол\NodeJS\12.06.23_ikkinchi_dars\Techopedia\controllers\author.controller.js:53:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2023-06-22T06:19:39.013Z error: uncaughtException: HELLO
+Error: HELLO
+    at Timeout._onTimeout (C:\Users\User\OneDrive\Рабочий стол\NodeJS\12.06.23_ikkinchi_dars\Techopedia\controllers\author.controller.js:46:20)
+    at listOnTimeout (node:internal/timers:573:17)
+    at process.processTimers (node:internal/timers:514:7)

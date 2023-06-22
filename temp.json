@@ -1,0 +1,26 @@
+{
+  "level": "\u001b[32minfo\u001b[39m",
+  "message": "POST /api/author/login 200 831ms",
+  "meta": {
+    "req": {
+      "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "connection": "keep-alive",
+        "content-length": "83",
+        "content-type": "application/json",
+        "cookie": "refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OTE1MDAwOTY4NWE4NTM5NzJlNjQ1NSIsImlzX2V4cGVydCI6ZmFsc2UsImF1dGhvclJvbGVzIjpbIlJFQUQiLCJXUklURSJdLCJpYXQiOjE2ODc0MTA4MDAsImV4cCI6MTY4NzQ5NzIwMH0.b9iauA-Vu-1BMdAWCQDcq-J-VNY7B42kTrsMFOzaq_o; userRefreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0OTJmMTUwOGJhMjI0OTUwOTkxNzE0ZCIsInVzZXJfaXNfYWN0aXZlIjpmYWxzZSwiaWF0IjoxNjg3MzUxNjk1LCJleHAiOjE2ODc0MzgwOTV9.4ZcQNkPsBL3qQcOPlsGhre_czLIlYFFVxHDduf9DB9Q",
+        "host": "localhost:8888",
+        "postman-token": "51ab5224-4017-411c-b809-68da6c72e342",
+        "user-agent": "PostmanRuntime/7.32.3"
+      },
+      "httpVersion": "1.1",
+      "method": "POST",
+      "originalUrl": "/api/author/login",
+      "query": {},
+      "url": "/api/author/login"
+    },
+    "res": { "statusCode": 200 },
+    "responseTime": 831
+  }
+}
